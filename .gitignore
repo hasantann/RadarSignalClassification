@@ -1,0 +1,33 @@
+<<<<<<< HEAD
+@"
+# MATLAB generated files
+=======
+# MATLAB otomatik dosyalari
+>>>>>>> 2eae31a71739f98cd8f030e5cc985311820ea223
+*.asv
+*.m~
+slprj/
+
+<<<<<<< HEAD
+# Model and checkpoint files
+=======
+# Buyuk model ve checkpoint dosyalari (kaynak kod DEGIL, versiyona alinmaz)
+models/
+>>>>>>> 2eae31a71739f98cd8f030e5cc985311820ea223
+checkpoints/
+
+# Uretilen veri seti icerigi (dataset/ altindaki .m kaynak dosyalari haric)
+dataset/dataset_multiframe_patches/
+dataset/**/specNoisyGray/
+dataset/**/specCleanGray/
+dataset/**/specDenoisedGray/
+dataset/**/meta/
+
+# Degerlendirme ciktilari
+**/_eval_results/
+**/_eval_results_gray/
+
+# OS / IDE dosyalari
+.DS_Store
+Thumbs.db
+.vscode/

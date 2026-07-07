@@ -1,0 +1,313 @@
+======================================================================
+ RADAR SİNYAL SINIFLANDIRMA VE GÜRÜLTÜ GİDERME — KONUŞMA METNİ
+======================================================================
+Tahmini süre: 12-15 dakika (soru-cevap hariç)
+Not: Her slayt için anahtar cümleler verilmiştir; kelimesi kelimesine
+okumak yerine kendi cümlelerinle akıcı anlatman önerilir.
+
+----------------------------------------------------------------------
+SLAYT 1 — Başlık
+----------------------------------------------------------------------
+"Merhaba. Bugün sizlere gürültü giderme tabanlı, çok etiketli bir radar
+sinyal sınıflandırma çalışmasını anlatacağım. Çalışma üç ana bileşenden
+oluşuyor: spektrogramların gürültüden arındırılması, sinyal türlerinin
+sınıflandırılması ve son olarak sinyal parametrelerinin çıkarılması."
+
+(İpucu: Kendini tanıt, çalışmanın bir ELE565 radar sinyal işleme projesi
+olduğunu belirtebilirsin.)
+
+----------------------------------------------------------------------
+SLAYT 2 — İçindekiler
+----------------------------------------------------------------------
+"Sunumu şu başlıklarda ilerleteceğim: önce problemi ve motivasyonu, sonra
+genel mimariyi, veri setini, gürültü gidermeyi, sınıflandırmayı, parametre
+çıkarımını ve son olarak sonuçları paylaşacağım."
+
+(Kısa geç; 10 saniye yeter.)
+
+----------------------------------------------------------------------
+SLAYT 3 — Problem ve Motivasyon
+----------------------------------------------------------------------
+"Elektronik harp veya ESM alıcıları, yoğun bir elektromanyetik ortamda
+aynı anda çok sayıda radar sinyaliyle karşılaşır. İki temel zorluk var:
+Birincisi, düşük sinyal-gürültü oranında, yani düşük SNR'da, sinyaller
+spektrogramda gürültüye gömülür; klasik eşikleme yöntemleri ve el yapımı
+öznitelikler bu noktada yetersiz kalır. İkincisi, aynı zaman-frekans
+penceresinde birden fazla modülasyon türü üst üste binebilir. Bu yüzden
+problem tek etiketli değil, çok etiketli bir sınıflandırma problemidir.
+Bizim yaklaşımımız üç adımlı: önce öğrenme tabanlı gürültü giderme, sonra
+çok etiketli sınıflandırma, en sonda da parametre çıkarımı."
+
+----------------------------------------------------------------------
+SLAYT 4 — Katkılar
+----------------------------------------------------------------------
+"Çalışmanın dört ana katkısı var. Bir: gürültülü ve temiz spektrogram
+çiftlerini otomatik üreten, çok çerçeveli ve çok etiketli bir sentetik
+veri seti üreteci geliştirdik. İki: spektrogramı temizleyen, ResNet-18
+ve U-Net tabanlı bir gürültü giderme ağı eğittik. Üç: gürültülü ve
+temizlenmiş girişleri karşılaştıran, GoogLeNet tabanlı çok etiketli bir
+sınıflandırıcı kurduk. Dört: temizlenmiş spektrogramdan radar tanımlayıcı
+kelime çıkaran bir kenar tespiti boru hattı ekledik. Toplam yedi sınıfla
+çalışıyoruz: LFM, NLFM, FSK, Barker, Frank, polifaz kodlar ve 'sinyal yok'
+durumu."
+
+----------------------------------------------------------------------
+SLAYT 5 — Uçtan Uca Boru Hattı
+----------------------------------------------------------------------
+"Genel akış şu şekilde: Önce veri seti üreteci gürültülü ve temiz
+spektrogramları üretiyor. Bu gürültülü spektrogramlar denoiser'a giriyor,
+temizlenmiş çıktı sınıflandırıcıya, sınıflandırma sonrası da temizlenmiş
+görüntü parametre çıkarımına gidiyor. Önemli nokta: her aşama bağımsız bir
+MATLAB modülü; istediğinizi tek başına çalıştırabilirsiniz. Denoiser ve
+sınıflandırıcı, 224'e 224 boyutunda gri spektrogram yamaları üzerinde
+çalışıyor."
+
+----------------------------------------------------------------------
+SLAYT 6 — Radar Sinyal Türleri
+----------------------------------------------------------------------
+"Tanıdığımız modülasyon türleri şunlar: LFM, yani doğrusal frekans
+modülasyonlu chirp; NLFM, doğrusal olmayan FM; FSK, frekans kaydırmalı
+anahtarlama; Barker bifaz kodları; Frank polifaz kodu; P1'den P4'e polifaz
+kodlar; ve son olarak yalnızca gürültü içeren 'none' durumu. Kritik nokta
+şu: bir yama aynı anda en fazla üç türü birden içerebiliyor. Bu yüzden
+çıktı, her sınıf için bağımsız bir olasılık; klasik tek-sınıf yaklaşımı
+burada işe yaramaz."
+
+----------------------------------------------------------------------
+SLAYT 7 — Veri Seti Üretimi
+----------------------------------------------------------------------
+"Veri setini tamamen sentetik olarak üretiyoruz. Önce on kısa çerçeveden
+oluşan bir IQ sahne simüle ediyoruz; örnekleme frekansı 30 megahertz.
+Türler, taşıyıcı frekans, darbe genişliği ve PRI rastgele seçiliyor; ayrıca
+taşıyıcılar arasında bir guard-band bırakıyoruz ki üst üste binmesinler.
+Dört farklı SNR seviyesini karıştırıyoruz: 20, 10, 0 ve eksi 10 dB.
+Spektrogramı 256 noktalı STFT, Hamming penceresi ve yüzde 75 örtüşmeyle
+hesaplıyoruz. Desibel değerlerini sabit bir global ölçekle sıfır-bir
+aralığına eşliyoruz. Son olarak uzun spektrogramı yüzde 50 örtüşen 224'e
+224 yamalara bölüyoruz. Sağdaki görselde üç satır görüyorsunuz: en üstte
+gürültülü, ortada temiz, en altta ise farkları."
+
+----------------------------------------------------------------------
+SLAYT 8 — Her Yama İçin Ne Kaydediliyor?
+----------------------------------------------------------------------
+"Her yama için birkaç şey kaydediyoruz. specNoisyGray, gürültülü gri
+spektrogram; bu hem denoiser'ın hem de ilk sınıflandırıcının girişi.
+specCleanGray, temiz referans; denoiser'ın hedefi ve PSNR/SSIM
+karşılaştırma referansı. specDenoisedGray, denoiser'ın çıktısı; ikinci
+sınıflandırıcının girişi. meta klasöründe her yamanın SNR, tür ve parametre
+bilgisi JSON olarak var. labels.csv ise her yama için yedi sınıflık ikili
+etiket vektörünü tutuyor. Yani tek veri setinden hem gürültü giderme hem de
+sınıflandırma besleniyor."
+
+----------------------------------------------------------------------
+SLAYT 9 — Denoiser Mimarisi
+----------------------------------------------------------------------
+"Denoiser bir enkoder-dekoder yapısı. Enkoder olarak ImageNet üzerinde
+ön-eğitilmiş ResNet-18 kullanıyoruz; sınıflandırma başlığını atıyoruz.
+Dekoder ise U-Net tarzında; transposed konvolüsyonlarla beş kademede
+görüntüyü yukarı örnekliyor. En kritik kısım skip bağlantıları: enkoderin
+ara katmanları doğrudan dekodere ekleniyor, böylece ince zaman-frekans
+yapıları kayboluyor. Giriş 224'e 224'e 3 kanal, çıkış tek kanallı bir
+regresyon. Kayıp fonksiyonu ortalama kare hata. Adam optimizasyonu, öğrenme
+oranı 10 üzeri eksi 4, batch boyutu 8, 40 epoch. İnce ayar yaptığımız için
+katman öğrenme oranlarını 0.2 faktörle küçülttük. Ayrıca checkpoint ve en
+iyi modeli saklama mekanizması var."
+
+----------------------------------------------------------------------
+SLAYT 10 — Denoiser Sonuçları
+----------------------------------------------------------------------
+"Soldaki grafikte PSNR'ın, sağdakinde SSIM'in SNR'a göre değişimini
+görüyorsunuz. Denoiser, gürültülü girişe kıyasla her iki metrikte de
+iyileşme sağlıyor. Somut bir örnek vereyim: düşük SNR'lı tek bir yamada
+PSNR 3.5 desibelden 22.6 desibele, SSIM ise 0.04'ten 0.76'ya çıktı. Yani
+ağ, sinyal yapısını gürültüden gerçekten ayırabiliyor."
+
+(İpucu: 3.5 -> 22.6 örneği gerçek bir ölçümdür; güvenle söyleyebilirsin.)
+
+----------------------------------------------------------------------
+SLAYT 11 — Çok Etiketli Sınıflandırma
+----------------------------------------------------------------------
+"Sınıflandırıcının omurgası GoogLeNet, yine ImageNet ön-eğitimli. Son
+katmanı yedi çıkışlı sigmoid yaptık; softmax değil. Softmax sınıfları
+birbiriyle yarıştırır, oysa bizde bir yamada birden çok sınıf aynı anda
+bulunabilir; sigmoid her sınıfı bağımsız değerlendirir. Kayıp fonksiyonu
+sadece ağırlıklı BCE değil; buna yumuşak-IoU ve yumuşak-küme terimleri
+ekledik ki yanlış pozitifler ve eksik etiketler cezalandırılsın. Sınıf
+dengesizliğini pozitif ve negatif ağırlıklarla dengeledik. Ayrıca her
+sınıf için karar eşiğini doğrulama setinde ayrı ayrı optimize ediyoruz.
+En önemlisi: iki model eğittik. Biri doğrudan gürültülü girişle,
+diğeri denoiser'dan geçmiş girişle. Böylece 'gürültü giderme
+sınıflandırmaya ne kadar katkı sağlıyor' sorusunu doğrudan ölçebiliyoruz."
+
+----------------------------------------------------------------------
+SLAYT 12 — Değerlendirme Metrikleri
+----------------------------------------------------------------------
+"Çok etiketli problemde tek bir doğruluk sayısı yanıltıcı olur; bu yüzden
+birkaç metrik kullanıyoruz. Subset accuracy en katı ölçüt: yamanın bütün
+etiketlerinin aynı anda doğru olmasını ister. Makro-F1, sınıf başına F1'in
+ortalaması; nadir sınıflara duyarlı olduğu için önemli. Sınıf başı F1 ise
+hangi modülasyonun kolay, hangisinin zor ayrıldığını gösteriyor. Denoiser
+tarafında PSNR ve SSIM kullanıyoruz. Alttaki grafik, sınıf başına F1'i
+gürültülü ve temizlenmiş girişler için karşılaştırıyor."
+
+----------------------------------------------------------------------
+SLAYT 13 — Sınıflandırma Sonuçları
+----------------------------------------------------------------------
+"Soldaki makro-F1, sağdaki subset accuracy. İki eğri şunu gösteriyor:
+gürültü giderme, özellikle düşük SNR bölgesinde başarımı belirgin şekilde
+yükseltiyor. Yüksek SNR'da ise sinyal zaten temiz olduğu için iki model
+birbirine yaklaşıyor. Yani denoiser'ın asıl faydası zor koşullarda ortaya
+çıkıyor; bu da beklediğimiz davranış."
+
+----------------------------------------------------------------------
+SLAYT 14 — Kenar Tespiti ve RDW Çıkarımı
+----------------------------------------------------------------------
+"Son aşama parametre çıkarımı. Temizlenmiş spektrogramdan başlıyoruz. Önce
+Otsu eşiklemesiyle ikili maske çıkarıyoruz, sonra bağlantılı bileşen analizi
+ve morfolojik işlemlerle blobları ayıklıyoruz. Bloblar olaylara, olaylar da
+PRI, darbe genişliği, bant genişliği ve taşıyıcı frekans toleranslarına göre
+kümelere dönüşüyor. Bir de periyodiklik skoru hesaplıyoruz ki düzenli darbe
+dizilerini yakalayalım. Sonuçta her küme için bir radar tanımlayıcı kelime
+ve spektrogram üzerinde sınır kutuları üretiyoruz. Eşik ve son-işlem
+parametrelerini de yer gerçeğine göre otomatik ayarlayan bir modülümüz var."
+
+----------------------------------------------------------------------
+SLAYT 15 — Gerçek Zamanlı Uygulanabilirlik ve Gecikme
+----------------------------------------------------------------------
+"Sık sorulan bir soru: bu yapı gerçek zamanlı çalışır mı? Ölçtük. Tabloda
+gördükleriniz CPU sayıları; GPU'da 5 ila 20 kat daha hızlı olur. Tek bir
+yamada denoiser yaklaşık 50 milisaniye, sınıflandırıcı 36 milisaniye,
+zincir toplam 86 milisaniye. Bir uzun spektrogram yaklaşık 19 yama, yani
+CPU'da yaklaşık 1.6 saniye. Mimari yama-bazlı ve durumsuz olduğu için akışa
+uygun; karar başına gecikme GPU'da onlarca milisaniye seviyesinde, bu da
+ESM uygulamaları için kabul edilebilir. Ancak her 5 milisaniyelik pencereyi
+kaçırmadan işleyen kesintisiz tam kapsama, mevcut haliyle sıkı. Online'a
+taşımak için: GPU ve batch çıkarım, örtüşmeyi azaltma, yüksek SNR'da
+denoiser'ı atlayan adaptif yaklaşım, model hafifletme ve uçtan uca
+birleştirme öne çıkan adımlar."
+
+(İpucu: Sayılar CPU'da ölçüldü; GPU'da beklenen iyileşmeyi vurgula.)
+
+----------------------------------------------------------------------
+SLAYT 16 — Özet ve Gelecek Çalışma
+----------------------------------------------------------------------
+"Özetle: denoise, sınıflandır ve parametre çıkar şeklinde uçtan uca,
+modüler bir boru hattı kurduk ve hepsi tek bir veri setinden besleniyor.
+Öğrenme tabanlı gürültü giderme, düşük SNR'da hem görüntü kalitesini hem de
+sınıflandırma başarımını belirgin biçimde artırıyor. Gelecek çalışma olarak
+üç yön düşünüyoruz: gerçek kaydedilmiş radar verisiyle doğrulama, denoiser
+ve sınıflandırıcının uçtan uca ortak eğitimi, ve spektrogram penceresi ile
+yan-lob bastırımı için ek iyileştirmeler. Dinlediğiniz için teşekkürler,
+sorularınızı alabilirim."
+
+
+======================================================================
+ OLASI SORULAR VE CEVAPLARI
+======================================================================
+
+S1) Neden softmax yerine sigmoid kullandınız?
+C1) Problem çok etiketli. Bir yamada aynı anda birden fazla sinyal türü
+    bulunabiliyor. Softmax sınıfları birbiriyle yarıştırır ve olasılıkları
+    toplamı 1 olacak şekilde normalize eder; bu, "yalnızca bir sınıf doğru"
+    varsayımıdır. Sigmoid ise her sınıfı bağımsız değerlendirir, dolayısıyla
+    birden fazla sınıfın aynı anda yüksek olasılık almasına izin verir.
+
+S2) Neden ResNet-18 ve GoogLeNet? Daha büyük ağlar denenmedi mi?
+C2) İkisi de ImageNet ön-eğitimli, hazır ve iyi dengelenmiş omurgalar.
+    ResNet-18 denoiser enkoderi için hafif ve skip bağlantılarına uygun;
+    GoogLeNet ise inception blokları sayesinde farklı ölçekli desenleri
+    (dar chirp'ler, geniş kodlar) yakalamada iyi. Amaç mimari yarışı değil,
+    boru hattının işe yaradığını göstermekti; daha büyük omurgalar
+    (ResNet-50, EfficientNet) doğrudan takılabilir.
+
+S3) Spektrogram doğal bir görüntü değil; ImageNet transfer öğrenmesi neden
+    işe yarıyor?
+C3) ImageNet ağırlıkları düşük seviyede kenar, doku ve yönelim filtreleri
+    öğrenir; bunlar spektrogramdaki chirp eğimleri ve kod desenleri için de
+    faydalı başlangıç noktalarıdır. Sıfırdan eğitime göre daha hızlı yakınsıyor
+    ve az veriyle daha iyi genelleşiyor. Zaten üst katmanları ince ayar
+    yaparak göreve uyarlıyoruz.
+
+S4) Denoiser neden GAN değil de regresyon?
+C4) Amacımız görsel olarak "gerçekçi" değil, referansa metrik olarak yakın
+    bir çıktı. Regresyon + MSE, PSNR/SSIM'i doğrudan iyileştirir ve eğitimi
+    kararlıdır. GAN daha keskin dokular üretebilir ama eğitim kararsızlığı ve
+    olmayan yapı uydurma (hallucination) riski taşır; sınıflandırma öncesi
+    bunu istemiyoruz.
+
+S5) Sentetik veriyle eğitim gerçek dünyaya genelleşir mi?
+C5) Bu çalışmanın bilinen sınırlaması. Sentetik veri, modülasyon fiziğini ve
+    gürültü modelini kontrollü biçimde üretmemizi sağlıyor; bu da temiz
+    referans ve kesin etiket elde etmenin tek pratik yolu. Gelecek adım,
+    modeli gerçek kaydedilmiş radar verisinde doğrulamak ve gerekiyorsa
+    alan uyarlaması (domain adaptation) uygulamak.
+
+S6) SNR nasıl tanımlandı ve neden karışık SNR ile eğitiyorsunuz?
+C6) SNR, sinyal gücünün gürültü gücüne oranı; sahneyi üretirken hedef SNR'a
+    göre gürültü standart sapmasını ayarlıyoruz. Karışık SNR eğitimi, modelin
+    tek bir gürültü seviyesine aşırı uyum sağlamasını engeller ve 20 dB'den
+    eksi 10 dB'ye kadar geniş bir bantta çalışabilen tek bir model verir.
+
+S7) Neden sıfır-bir normalizasyon ve global ölçek nasıl sabitlendi?
+C7) Spektrogram desibel değerleri sahneden sahneye çok değişir. Sabit bir
+    maksimum referans ve dinamik aralıkla desibeli sıfır-bir aralığına
+    kırpıyoruz; böylece tüm örnekler aynı ölçekte oluyor ve ağ tutarlı bir
+    giriş görüyor. Bu ölçek global_scale.mat dosyasında saklı. Not: denoiser
+    sıfır-bir aralığında eğitildi, çıkarımda da bu modu kullanmak şart;
+    yanlış normalizasyon sonucu bozar.
+
+S8) Çok etiketli kararda eşik nasıl seçiliyor?
+C8) Sigmoid çıkışları olasılık; ikili karara dönüştürmek için eşik gerekli.
+    Tüm sınıflar için sabit 0.5 yerine, her sınıfın eşiğini doğrulama setinde
+    F1'i en yükseltecek şekilde ayrı ayrı optimize ediyoruz. Bu, nadir ve
+    dengesiz sınıflarda başarımı artırıyor.
+
+S9) Gürültü giderme sınıflandırmayı her zaman iyileştiriyor mu?
+C9) Hayır, ve bu beklenen bir sonuç. Fayda düşük SNR'da büyük; yüksek SNR'da
+    sinyal zaten temiz olduğundan iki model birbirine yaklaşıyor. Yani
+    denoiser'ın değeri zor koşullarda ortaya çıkıyor.
+
+S10) PSNR ve SSIM radar spektrogramı için doğru metrikler mi?
+C10) Bunlar görüntü kalitesi metrikleri ve denoiser'ın referansa ne kadar
+    yaklaştığını nesnel ölçüyor. Ancak asıl önemli olan alt görevdeki etki;
+    bu yüzden PSNR/SSIM'i tek başına değil, sınıflandırma başarımıyla birlikte
+    raporluyoruz. Nihai ölçüt, temizlenmiş girişin sınıflandırmayı iyileştirip
+    iyileştirmediği.
+
+S11) Radar tanımlayıcı kelime (RDW) ne işe yarar?
+C11) RDW, bir darbe dizisini PRI, darbe genişliği, bant genişliği ve taşıyıcı
+    frekans gibi parametrelerle özetleyen bir tanımlayıcıdır. ESM tarafında
+    yayın tanımlama ve darbe ayrıştırma (deinterleaving) için temel girdidir;
+    yani "hangi radar, hangi modda" sorusuna giden yolun ilk adımı.
+
+S12) Kenar tespitinde neden Otsu, neden öğrenme tabanlı bir segmentasyon değil?
+C12) Otsu basit, parametresiz ve hızlı bir başlangıç; temizlenmiş spektrogram
+    üzerinde iyi çalışıyor. Ayrıca eşik ve son-işlem parametrelerini yer
+    gerçeğine göre otomatik ayarlayan bir modül ekledik. Öğrenme tabanlı
+    segmentasyon (ör. U-Net maske) doğal bir sonraki adım; ancak ek etiketli
+    maske gerektirir.
+
+S13) Hesaplama maliyeti nedir, gerçek zamanlı çalışır mı?
+C13) Eğitim GPU'da yapılıyor. Çıkarımda denoiser ve sınıflandırıcı ileri
+    geçişleri tek bir yama için milisaniyeler mertebesinde. Tam gerçek zamanlı
+    bir sistem için yama akışının ardışık düzenlenmesi (pipelining) ve model
+    hafifletme (quantization/pruning) gerekir; bu çalışmada odak doğruluktu.
+
+S14) Kaç örnek var ve veri dengesizliğini nasıl ele aldınız?
+C14) Yaklaşık 1200 yamalık bir doğrulama alt kümesi üzerinde çalıştık; üretici
+    istenen kadar üretebiliyor. Dengesizliği iki yerde ele aldık: veri
+    üretiminde boş (none) yamaların yalnızca bir kısmını tutuyoruz, eğitimde
+    ise kayıp fonksiyonunda pozitif/negatif sınıf ağırlıkları kullanıyoruz.
+
+S15) İki ayrı sınıflandırıcı yerine uçtan uca birlikte eğitilemez mi?
+C15) Eğitilebilir ve bu bizim gelecek çalışma maddemiz. Şu an denoiser ve
+    sınıflandırıcıyı ayrı eğitmek, her aşamayı bağımsız analiz etmemizi ve
+    gürültü gidermenin katkısını izole ölçmemizi sağlıyor. Uçtan uca ortak
+    eğitim, sınıflandırma kaybını denoiser'a geri yayarak toplam başarımı
+    artırabilir.
+
+S16) Frank ve polifaz (P_All) kodlarını ayırmak neden zor olabilir?
+C16) Frank ve P1-P4 kodları hepsi polifaz ailesinden; zaman-frekans
+    izdüşümleri birbirine benzer basamaklı yapılar üretir. Düşük SNR'da bu
+    ince farklar gürültüyle örtüşür. Sınıf başı F1 grafiğinde bu sınıfların
+    görece daha zor olması beklenir; gürültü giderme burada özellikle yardımcı.
